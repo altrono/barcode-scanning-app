@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:image_picker/image_picker.dart';
 
 void main() {
@@ -18,14 +19,17 @@ class _MyHomePageState extends State<MyHomePage> {
   File? _image;
   String result = 'results will be shown here';
 
-  //TODO declare scanner
+  //declare scanner
+  dynamic barcodeScanner;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     imagePicker = ImagePicker();
-    //TODO initialize scanner
+    // Barcode scanner set up.
+    final List<BarcodeFormat> formats = [BarcodeFormat.all];
+    barcodeScanner = BarcodeScanner(formats: formats);
 
   }
 
@@ -59,6 +63,30 @@ class _MyHomePageState extends State<MyHomePage> {
 
   //TODO barcode scanning code here
   doBarcodeScanning() async {
+    InputImage inputImage = InputImage.fromFile(_image!);
+    final List<Barcode> barcodes = await barcodeScanner.processImage(inputImage);
+
+    for (Barcode barcode in barcodes) {
+      final BarcodeType type = barcode.type;
+      final Rect? boundingBox = barcode.boundingBox;
+      final String? displayValue = barcode.displayValue;
+      final String? rawValue = barcode.rawValue;
+
+      // See API reference for complete list of supported types
+      switch (type) {
+        case BarcodeType.wifi:
+          BarcodeWifi? barcodeWifi = barcode.value as BarcodeWifi;
+          result = 'Wifi: '+barcodeWifi.password!;
+          break;
+        case BarcodeType.url:
+          BarcodeUrl barcodeUrl = barcode.value as BarcodeUrl;
+          result = 'Url:'+barcodeUrl.url!;
+          break;
+      }
+      setState(() {
+        result;
+      });
+    }
 
   }
 
